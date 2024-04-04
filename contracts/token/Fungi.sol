@@ -7,15 +7,19 @@ import "./PoolCreatableErc20i.sol";
 import "../Generator.sol";
 
 library ExtraSeedLibrary {
-    function extra(address account) internal pure returns (uint256) {
-        return uint(keccak256(abi.encode(account)));
+    function extra(
+        address account,
+        uint extraSeed
+    ) internal pure returns (uint256) {
+        return uint(keccak256(abi.encodePacked(account, extraSeed)));
     }
 
     function seed_data(
         address account,
-        uint seed
+        uint seed,
+        uint extraSeed
     ) internal pure returns (SeedData memory) {
-        return SeedData(seed, extra(account));
+        return SeedData(seed, extra(account, extraSeed));
     }
 }
 
@@ -31,6 +35,7 @@ abstract contract Mushrooms is PoolCreatableErc20i {
     uint _mushroomsTotalCount;
     uint _holdersCount;
     uint _sporesTotalCount;
+    uint _random_nonce;
 
     event OnMushroomTransfer(
         address indexed from,
@@ -137,7 +142,7 @@ abstract contract Mushrooms is PoolCreatableErc20i {
         SeedData memory last = _spores[account];
 
         _spores[account].seed += seed;
-        _spores[account].extra = account.extra();
+        _spores[account].extra = account.extra(++_random_nonce);
 
         if (last.seed == 0 && _spores[account].seed > 0) ++_sporesTotalCount;
 
@@ -150,6 +155,7 @@ abstract contract Mushrooms is PoolCreatableErc20i {
         SeedData memory lastSpores = _spores[account];
         if (_spores[account].seed >= seed) {
             _spores[account].seed -= seed;
+            _spores[account].extra = account.extra(++_random_nonce);
             if (lastSpores.seed > 0 && _spores[account].seed == 0)
                 --_sporesTotalCount;
             emit OnSporesShrink(account, _spores[account]);
@@ -157,6 +163,7 @@ abstract contract Mushrooms is PoolCreatableErc20i {
         }
         uint seedRemains = seed - _spores[account].seed;
         _spores[account].seed = 0;
+        _spores[account].extra = account.extra(++_random_nonce);
 
         // remove mushrooms
         uint count = _counts[account];
@@ -165,8 +172,10 @@ abstract contract Mushrooms is PoolCreatableErc20i {
             removed += _removeFirstTokenFromOwner(account);
         }
 
-        if (removed > seedRemains)
+        if (removed > seedRemains){
             _spores[account].seed += removed - seedRemains;
+            _spores[account].extra = account.extra(++_random_nonce);
+        }
         if (lastSpores.seed > 0 && _spores[account].seed == 0)
             --_sporesTotalCount;
         emit OnSporesShrink(account, _spores[account]);
