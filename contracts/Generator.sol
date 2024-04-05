@@ -12,6 +12,8 @@ uint constant seedLevel2 = 525000;
 uint constant seedLevel3 = 1050000;
 uint constant seedLevel4 = 1575000;
 uint constant seedLevel5 = 2100000;
+string constant description = "Fungi, $FUNGI. The First ERC-20i with Native Inscriptions.";
+string constant web = "https://fungifungi.art/";
 
 struct MushroomData {
     uint lvl;
@@ -585,6 +587,12 @@ contract Generator is Ownable {
             data.hasDots ? "true" : "false",
             ',"dotsColor":"',
             data.dotsColor,
+            '",'
+        );
+        bytes memory web_text = abi.encodePacked('"web":"', web, '",');
+        bytes memory description_text = abi.encodePacked(
+            '"description":"',
+            description,
             '"'
         );
 
@@ -598,6 +606,8 @@ contract Generator is Ownable {
                     stem,
                     cap,
                     capDots,
+                    web_text,
+                    description_text,
                     "}"
                 )
             );
