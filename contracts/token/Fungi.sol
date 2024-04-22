@@ -66,7 +66,9 @@ abstract contract Inscriptions is PoolCreatableErc20i {
             account == address(0)
         ) return false;
 
-        return (_dynamicInscription[account].seed + this.inscriptionCount(account)) > 0;
+        return
+            (_dynamicInscription[account].seed +
+                this.inscriptionCount(account)) > 0;
     }
 
     function trySeedTransfer(
@@ -149,7 +151,8 @@ abstract contract Inscriptions is PoolCreatableErc20i {
         _dynamicInscription[account].seed += seed;
         _dynamicInscription[account].extra = account.extra(++_random_nonce);
 
-        if (last.seed == 0 && _dynamicInscription[account].seed > 0) ++_dynamicInscriptionTotalCount;
+        if (last.seed == 0 && _dynamicInscription[account].seed > 0)
+            ++_dynamicInscriptionTotalCount;
 
         emit OnSporesGrow(account, _dynamicInscription[account]);
     }
@@ -183,6 +186,8 @@ abstract contract Inscriptions is PoolCreatableErc20i {
         }
         if (lastSpores.seed > 0 && _dynamicInscription[account].seed == 0)
             --_dynamicInscriptionTotalCount;
+        if (lastSpores.seed == 0 && _dynamicInscription[account].seed > 0)
+            ++_dynamicInscriptionTotalCount;
         emit OnSporesShrink(account, _dynamicInscription[account]);
     }
 
