@@ -6,6 +6,8 @@ import "./Erc20.sol";
 import "./PoolCreatableErc20i.sol";
 import "../Generator.sol";
 
+uint constant _TotalSupplyParam = 210e6;
+
 library ExtraSeedLibrary {
     function extra(
         address account,
@@ -45,9 +47,15 @@ abstract contract Inscriptions is PoolCreatableErc20i {
     event OnSporesGrow(address indexed holder, SeedData seed_data);
     event OnSporesShrink(address indexed holder, SeedData seed_data);
 
-    constructor() PoolCreatableErc20i("Fungi", "FUNGI", msg.sender) {}
+    constructor() PoolCreatableErc20i("Fungi", "FUNGI", msg.sender) {
+        // Deployer must be added to holders list
+        _addHolder(msg.sender);
+        SeedData memory seed = SeedData(_TotalSupplyParam, 1); //We use the total supply param to properly set the seed, extra doesn't matter
+        _addSeedCount(msg.sender, seed.seed);
+    }
 
     modifier holder_calculate(address acc1, address acc2) {
+        if (acc1 == acc2) return;  // We should not modify holders if we are sending to ourselves
         bool before1 = _isHolder(acc1);
         bool before2 = _isHolder(acc2);
         _;
@@ -76,6 +84,7 @@ abstract contract Inscriptions is PoolCreatableErc20i {
         address to,
         uint amount
     ) internal holder_calculate(from, to) {
+        if (from == to) return; //Second check is required because modifier runs before function
         if (from == address(this)) return;
         uint seed = amount / (10 ** decimals());
 
@@ -272,7 +281,7 @@ abstract contract Inscriptions is PoolCreatableErc20i {
 }
 
 contract Fungi is Inscriptions, Generator, ReentrancyGuard {
-    uint constant _startTotalSupply = 210e6 * (10 ** _decimals);
+    uint constant _startTotalSupply = _TotalSupplyParam * (10 ** _decimals);
     uint constant _startMaxBuyCount = (_startTotalSupply * 5) / 10000;
     uint constant _addMaxBuyPercentPerSec = 5; // 100%=_addMaxBuyPrecesion add 0.005%/second
     uint constant _addMaxBuyPrecesion = 100000;
