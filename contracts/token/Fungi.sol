@@ -55,7 +55,6 @@ abstract contract Inscriptions is PoolCreatableErc20i {
     }
 
     modifier holder_calculate(address acc1, address acc2) {
-        if (acc1 == acc2) return;  // We should not modify holders if we are sending to ourselves
         bool before1 = _isHolder(acc1);
         bool before2 = _isHolder(acc2);
         _;
@@ -84,7 +83,6 @@ abstract contract Inscriptions is PoolCreatableErc20i {
         address to,
         uint amount
     ) internal holder_calculate(from, to) {
-        if (from == to) return; //Second check is required because modifier runs before function
         if (from == address(this)) return;
         uint seed = amount / (10 ** decimals());
 
